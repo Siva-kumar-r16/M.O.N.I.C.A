@@ -1,49 +1,38 @@
-🧠 M.O.N.I.C.A.
+# 🧠 M.O.N.I.C.A.
 
-Multimodal Operational Neural Intelligence & Conversational Assistant
+### Multimodal Operational Neural Intelligence & Conversational Assistant
 
-M.O.N.I.C.A. is a personal AI-powered Telegram manager and conversational assistant built with Python, Telegram MTProto, Telethon, Ollama, and local Large Language Models.
+M.O.N.I.C.A. is a personal AI-powered Telegram manager and conversational assistant built with **Python, Telethon, Telegram MTProto, Ollama, and local Large Language Models**.
 
-The goal of M.O.N.I.C.A. is to combine AI, memory, automation, communication, plugins, and personal assistance into one modular system.
+The project combines **AI, memory, automation, communication, plugins, and personal assistance** into one modular local system.
 
-✨ Features
+---
 
-🤖 Local AI using Ollama
+## ✨ Features
 
-🧠 Short-term conversation memory
+* 🤖 **Local AI** powered by Ollama
+* 🧠 **Short-term conversation memory**
+* 💾 **Long-term conversation summaries**
+* 👤 **Personal facts and preferences**
+* 💬 **Telegram personal-account integration**
+* 🔘 **Telegram inline and hyperlink buttons**
+* ⚙️ **Modular plugin architecture**
+* ⏰ **Persistent scheduler**
+* 🛠️ **Command system**
+* 👥 **Contact and auto-reply management**
+* 📝 **Keyword filters and snippets**
+* 🎭 **Custom AI persona**
+* 🔐 **Local credential and runtime-data protection**
+* 🧩 **Extensible AI tools**
+* 🧪 **Testing utilities**
+* 🌍 **Multilingual message understanding**
+* 🇬🇧 **English replies by default**
 
-💾 Long-term conversation summaries
+---
 
-👤 Personal facts and preferences
+## 🏗️ Architecture
 
-💬 Telegram personal-account integration
-
-🔘 Telegram inline and hyperlink buttons
-
-⚙️ Modular plugin architecture
-
-⏰ Persistent scheduler
-
-🛠️ Command system
-
-👥 Contact and auto-reply management
-
-📝 Keyword filters and snippets
-
-🎭 Custom AI persona
-
-🔐 Local credential and runtime-data protection
-
-🧩 Extensible AI tools
-
-🧪 Testing utilities
-
-🌍 Multilingual message understanding
-
-🇬🇧 English replies by default
-
-🧠 Architecture
-
+```text
                          ┌──────────────────────┐
                          │       Telegram       │
                          │   Personal Account   │
@@ -65,7 +54,7 @@ The goal of M.O.N.I.C.A. is to combine AI, memory, automation, communication, pl
                     ┌───────────────┼────────────────┐
                     │               │                │
                     ▼               ▼                ▼
-                🧠 Memory        🎭 Persona        🛠️ Tools
+                🧠 Memory       🎭 Persona       🛠️ Tools
                     │               │                │
                     └───────────────┼────────────────┘
                                     │
@@ -81,12 +70,15 @@ The goal of M.O.N.I.C.A. is to combine AI, memory, automation, communication, pl
                          │      Local LLM       │
                          │   Qwen 2.5 Coder 7B  │
                          └──────────────────────┘
+```
 
+---
 
-🔄 Message Flow
+## 🔄 Message Flow
 
-A normal incoming message follows this architecture:
+A normal incoming message follows this pipeline:
 
+```text
 Telegram Message
        ↓
 Telegram Client
@@ -110,141 +102,148 @@ Response Parser
 Telegram Reply
        ↓
 Background Memory Consolidation
+```
 
+---
 
-🧠 Memory System
+## 🧠 Memory System
 
 M.O.N.I.C.A. uses a multi-level memory architecture.
 
-Level 1 — Short-Term Memory
+### Level 1: Short-Term Memory
+
 Stores recent conversation context for fast AI responses.
 
+```text
 Recent Messages
-      ↓
+       ↓
 Short-Term Buffer
-      ↓
+       ↓
 AI Context
-
+```
 
 This allows M.O.N.I.C.A. to understand the current conversation without repeatedly processing the entire chat.
 
-Level 2 — Long-Term Memory
+### Level 2: Long-Term Memory
+
 Older conversations can be summarized and stored as persistent conversation summaries.
 
+```text
 Conversation
-     ↓
+       ↓
 Message Threshold
-     ↓
+       ↓
 AI Summarization
-     ↓
+       ↓
 SQLite
-     ↓
+       ↓
 Long-Term Context
-
+```
 
 Long-term summarization is performed in the background so it does not intentionally block normal Telegram replies.
 
-Level 3 — Discrete Memory
+### Level 3: Discrete Memory
+
 M.O.N.I.C.A. can store useful personal facts and preferences.
+
 Examples:
 
+```text
 "My name is Rahul."
-
 "I prefer Python."
-
 "I like coffee."
-
 "I live in Chennai."
+```
 
 These memories can later be retrieved and used to personalize conversations.
 
-🤖 AI Backend
+---
+
+## 🤖 AI Backend
 
 M.O.N.I.C.A. currently uses:
 
+```text
 Ollama
    ↓
 Qwen 2.5 Coder 7B
+```
 
+The AI model runs locally through Ollama.
 
-The AI model runs locally through Ollama. The AI provider is separated from the rest of the application so the model/backend can be changed later without redesigning the entire system.
+The AI provider is separated from the rest of the application, allowing the model or backend to be changed later without redesigning the entire system.
 
-🌍 Language Handling
+---
+
+## 🌍 Language Handling
 
 M.O.N.I.C.A. is designed to understand messages written in different languages and mixed-language forms.
-Examples include:
 
-English
+Supported examples include:
 
-Tamil
-
-Tanglish
-
-Hindi
-
-Hinglish
-
-Telugu
-
-Malayalam
-
-Kannada
-
-Bengali
-
-Other languages
+* 🇬🇧 English
+* 🇮🇳 Tamil
+* 🗣️ Tanglish
+* 🇮🇳 Hindi
+* 🗣️ Hinglish
+* 🇮🇳 Telugu
+* 🇮🇳 Malayalam
+* 🇮🇳 Kannada
+* 🇮🇳 Bengali
+* 🌐 Other languages supported by the configured model
 
 By default, M.O.N.I.C.A. responds in natural English unless the user explicitly requests another language.
 
-💬 Telegram Integration
+---
 
-M.O.N.I.C.A. uses Telegram MTProto through Telethon.
+## 💬 Telegram Integration
+
+M.O.N.I.C.A. uses **Telegram MTProto through Telethon**.
+
 Unlike a traditional Telegram Bot API application, M.O.N.I.C.A. is designed to operate through a personal Telegram account.
+
 Current capabilities include:
 
-📩 Receiving messages
+* 📩 Receiving messages
+* 📤 Sending messages
+* ↩️ Replying to messages
+* ✏️ Editing messages
+* 🗑️ Deleting messages
+* 🔘 Inline buttons
+* 🔗 Hyperlink buttons
+* 🛠️ Commands
+* 👥 Contact management
+* 🤖 Automated replies
+* 📝 Keyword filters
+* 📌 Snippets
 
-📤 Sending messages
+---
 
-↩️ Replying to messages
-
-✏️ Editing messages
-
-🗑️ Deleting messages
-
-🔘 Inline buttons
-
-🔗 Hyperlink buttons
-
-🛠️ Commands
-
-👥 Contact management
-
-🤖 Automated replies
-
-📝 Keyword filters
-
-📌 Snippets
-
-🔘 Interactive Buttons
+## 🔘 Interactive Buttons
 
 M.O.N.I.C.A. includes a Telegram button parser for interactive responses.
+
 Example:
 
+```text
 Choose an option:
 
 [ Open Website ]
 [ Continue ]
 [ Cancel ]
-
+```
 
 Buttons can be generated and handled through the Telegram module.
 
-🧩 Plugin System
+---
+
+## 🧩 Plugin System
 
 M.O.N.I.C.A. uses a modular plugin architecture.
+
 Current plugin areas include:
 
+```text
 monica/plugins/
 │
 ├── auto_reply/
@@ -253,107 +252,101 @@ monica/plugins/
 ├── media/
 ├── messaging/
 └── utilities/
-
+```
 
 The plugin architecture allows functionality to be added independently without modifying the entire core application.
 
-⏰ Scheduler
+---
+
+## ⏰ Scheduler
 
 M.O.N.I.C.A. includes a persistent scheduler system for automation and scheduled tasks.
+
 Potential uses include:
 
-Reminders
+* ⏰ Reminders
+* 📩 Scheduled messages
+* 🔄 Periodic tasks
+* 🤖 Future automation
 
-Scheduled messages
+---
 
-Periodic tasks
-
-Future automation
-
-🎭 Persona System
+## 🎭 Persona System
 
 M.O.N.I.C.A. separates AI personality and user profile information from the core application.
+
 Persona files are located inside:
 
+```text
 monica/persona/
-
+```
 
 The persona system can control:
 
-Personality
+* Personality
+* Communication style
+* Assistant identity
+* User profile
+* Behavioral instructions
+* Response preferences
 
-Communication style
+---
 
-Assistant identity
+## 🗄️ Database
 
-User profile
+M.O.N.I.C.A. uses **SQLite** for local persistent storage.
 
-Behavioral instructions
-
-Response preferences
-
-🗄️ Database
-
-M.O.N.I.C.A. uses SQLite for local persistent storage.
 The database layer can store application information such as:
 
-Message history
-
-Conversation information
-
-Memories
-
-Conversation summaries
-
-Scheduler state
-
-Other persistent application data
+* Message history
+* Conversation information
+* Memories
+* Conversation summaries
+* Scheduler state
+* Other persistent application data
 
 Runtime databases are intentionally excluded from Git.
 
-🔐 Security
+---
+
+## 🔐 Security
 
 Sensitive credentials and runtime information are intentionally kept outside the public source repository.
-The following should never be committed:
 
+### Never commit
+
+```text
 .env
-
 Telegram API credentials
-
 Telegram session strings
-
 Bot tokens
-
 Discord tokens
-
 Passwords
-
 Private API keys
-
 Personal databases
-
 Private conversation logs
+```
 
-Runtime files such as the following are also excluded:
+### Runtime files excluded from Git
 
+```text
 data/
-
 logs/
-
 *.db
-
 *.sqlite
-
 *.session
-
 *.session-journal
+```
 
-The repository's .gitignore is configured to help prevent accidental commits of these files.
+The repository's `.gitignore` is configured to help prevent accidental commits of these files.
 
-⚠️ Never share your Telegram session string or API credentials publicly.
+> ⚠️ **Never share your Telegram session string or API credentials publicly.**
 
-📁 Project Structure
+---
 
+## 📁 Project Structure
+
+```text
 M.O.N.I.C.A/
 │
 ├── main.py
@@ -428,240 +421,288 @@ M.O.N.I.C.A/
     │   └── mock_data.py
     ├── persona_harness.py
     └── test_suite.py
+```
 
+---
 
-⚙️ Requirements
+## ⚙️ Requirements
 
-Python 3.x
+Before running M.O.N.I.C.A., make sure you have:
 
-Telegram account
+* 🐍 Python 3.x
+* 📱 A Telegram account
+* 🔑 Telegram API credentials
+* 📦 Telethon
+* 🤖 Ollama
+* 🧠 A compatible local LLM
+* 🗄️ SQLite
+* 🌐 Internet connection for Telegram communication
 
-Telegram API credentials
+---
 
-Telethon
+## 🚀 Installation
 
-Ollama
+### 1. Clone the repository
 
-Compatible local LLM
-
-SQLite
-
-Internet connection for Telegram communication
-
-🚀 Installation
-
-1. Clone the repository
-
+```bash
 git clone https://github.com/Siva-kumar-r16/M.O.N.I.C.A.git
 cd M.O.N.I.C.A
+```
 
+### 2. Create a virtual environment
 
-2. Create a virtual environment
+#### Windows
 
-Windows:
-
+```bash
 python -m venv .venv
 .venv\Scripts\activate
+```
 
+#### Linux / macOS
 
-Linux / macOS:
-
+```bash
 python3 -m venv .venv
 source .venv/bin/activate
+```
 
+### 3. Install dependencies
 
-3. Install dependencies
-
+```bash
 pip install -r requirements.txt
+```
 
+---
 
-🔐 Configuration
+## 🔐 Configuration
 
-Create a local .env file in the root directory.
+Create a local `.env` file in the root directory.
 
-⚠️ Do not commit .env to Git.
+> ⚠️ **Do not commit `.env` to Git.**
 
-Example .env:
+Example:
 
+```env
 API_ID=your_telegram_api_id
 API_HASH=your_telegram_api_hash
 SESSION_STRING=your_telegram_session
 
 OLLAMA_HOST=http://127.0.0.1:11434
 OLLAMA_MODEL=qwen2.5-coder:7b
+```
 
+Use your actual credentials only in your local `.env` file.
 
-Use your actual credentials only in your local .env.
+---
 
-🧠 Ollama Setup
+## 🧠 Ollama Setup
 
 Install Ollama and make sure the Ollama server is running.
+
 Pull the configured model:
 
+```bash
 ollama pull qwen2.5-coder:7b
-
+```
 
 Check installed models:
 
+```bash
 ollama list
+```
 
+M.O.N.I.C.A. connects to the local Ollama server.
 
-M.O.N.I.C.A. connects to the local Ollama server. Ollama does not need to be exposed publicly.
+> 🔒 Ollama does not need to be exposed publicly.
 
-▶️ Running M.O.N.I.C.A.
+---
+
+## ▶️ Running M.O.N.I.C.A.
 
 Start the application:
 
+```bash
 python main.py
-
+```
 
 A successful startup should indicate that M.O.N.I.C.A. has authenticated with Telegram and is listening for messages.
-Example output:
 
+Example:
+
+```text
 M.O.N.I.C.A. is active and listening for messages!
+```
 
+---
 
-🧪 Testing
+## 🧪 Testing
 
-Testing utilities are located under testing/.
+Testing utilities are located under:
+
+```text
+testing/
+```
+
 Current testing areas include:
 
-Message fixtures
+* Message fixtures
+* Mock data
+* Persona testing
+* Test suite
 
-Mock data
+---
 
-Persona testing
-
-Test suite
-
-🔄 Development Workflow
+## 🔄 Development Workflow
 
 The recommended development workflow is:
 
+```text
 1. Modify code
-      ↓
+       ↓
 2. Test locally
-      ↓
+       ↓
 3. git status
-      ↓
+       ↓
 4. git add .
-      ↓
+       ↓
 5. git commit
-      ↓
+       ↓
 6. git push
+```
 
+Example:
 
-Example commands:
-
+```bash
+git status
 git add .
 git commit -m "Update M.O.N.I.C.A."
 git push
+```
 
+---
 
-🌐 Future Multi-Platform Architecture
+## 🌐 Future Multi-Platform Architecture
 
 M.O.N.I.C.A. is designed to eventually support multiple communication platforms.
 
-                    M.O.N.I.C.A.
-                         │
-           ┌─────────────┼─────────────┐
-           │             │             │
-           ▼             ▼             ▼
-       Telegram       Discord       Future
-       Integration    Integration   Platforms
-           │             │             │
-           └─────────────┼─────────────┘
-                         │
-                         ▼
-                    AI Manager
-                         │
-                         ▼
-                      Ollama
-                         │
-                         ▼
-                    Local LLM
-                         │
-                         ▼
-                   Shared Memory
+```text
+                         M.O.N.I.C.A.
+                              │
+                 ┌────────────┼────────────┐
+                 │            │            │
+                 ▼            ▼            ▼
+             Telegram      Discord       Future
+             Integration   Integration   Platforms
+                 │            │            │
+                 └────────────┼────────────┘
+                              │
+                              ▼
+                         AI Manager
+                              │
+                              ▼
+                            Ollama
+                              │
+                              ▼
+                           Local LLM
+                              │
+                              ▼
+                         Shared Memory
+```
 
+The goal is to keep the following layers shared:
 
-The goal is to keep the AI, memory, personality, tools, and automation layers shared while platform integrations handle platform-specific communication.
+* AI
+* Memory
+* Personality
+* Tools
+* Automation
 
-🛣️ Roadmap
+Platform integrations should handle communication-specific functionality.
 
-[x] Telegram MTProto integration
+---
 
-[x] Local Ollama integration
+## 🛣️ Roadmap
 
-[x] AI response generation
+### Core
 
-[x] Persona system
+* [x] Telegram MTProto integration
+* [x] Local Ollama integration
+* [x] AI response generation
+* [x] Persona system
+* [x] Plugin architecture
 
-[x] Short-term memory
+### Memory
 
-[ ] Long-term memory architecture
+* [x] Short-term memory
+* [x] Long-term memory architecture
+* [x] Discrete memory system
+* [ ] Improved automatic memory extraction
 
-[ ] Discrete memory system
+### Telegram
 
-[ ] Telegram buttons
+* [x] Telegram buttons
+* [x] Contact management
+* [x] Auto-reply system
+* [x] Keyword filters
+* [x] Snippets
 
-[x] Plugin architecture
+### Automation
 
-[ ] Scheduler architecture
+* [x] Scheduler architecture
+* [ ] Advanced automation
+* [ ] Improved error recovery
 
-[ ] Contact management
+### AI Capabilities
 
-[ ] Auto-reply system
+* [ ] Advanced AI tools
+* [ ] Media understanding
+* [ ] Voice interaction
+* [ ] Vision capabilities
+* [ ] Improved performance optimization
 
-[ ] Discord integration
+### Platforms
 
-[ ] Multi-platform messaging
+* [ ] Discord integration
+* [ ] Multi-platform messaging
 
-[ ] Improved automatic memory extraction
+### Testing & Development
 
-[ ] Advanced AI tools
+* [ ] Expanded testing
+* [ ] CI/CD
 
-[ ] Media understanding
+---
 
-[ ] Voice interaction
+## 📜 License
 
-[ ] Vision capabilities
+See the [`LICENSE`](LICENSE) file included in this repository.
 
-[ ] Advanced automation
+---
 
-[ ] Improved error recovery
+## ⚠️ Disclaimer
 
-[ ] Further performance optimization
+M.O.N.I.C.A. is a personal software project intended for:
 
-[ ] Expanded testing
-
-[ ] CI/CD
-
-📜 License
-
-See the LICENSE file included in this repository.
-
-⚠️ Disclaimer
-
-M.O.N.I.C.A. is a personal software project intended for experimentation, learning, AI integration, automation, and personal productivity.
+* Experimentation
+* Learning
+* AI integration
+* Automation
+* Personal productivity
 
 Users are responsible for:
 
-Protecting their credentials
+* 🔐 Protecting their credentials
+* 🔑 Protecting their Telegram session
+* 📜 Following Telegram's terms and policies
+* 📜 Following Discord's terms and policies when Discord integration is used
+* ⚖️ Following applicable laws and regulations
+* 👀 Reviewing automated actions before enabling them
+* 🚫 Never publishing private authentication credentials, session strings, passwords, or private user data
 
-Protecting their Telegram session
+---
 
-Following Telegram's terms and policies
+## 👨‍💻 Project
 
-Following Discord's terms and policies when Discord integration is used
+**M.O.N.I.C.A.**
 
-Following applicable laws and regulations
+**Multimodal Operational Neural Intelligence & Conversational Assistant**
 
-Reviewing automated actions before enabling them
-
-Never publish private authentication credentials, session strings, passwords, or private user data.
-
-👨‍💻 Project
-M.O.N.I.C.A.
-Multimodal Operational Neural Intelligence & Conversational Assistant
-A personal AI system designed to communicate, remember, automate, and evolve.
+> A personal AI system designed to communicate, remember, automate, and evolve.
