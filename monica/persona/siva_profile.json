@@ -1,0 +1,45 @@
+{
+  "personal_info": {
+    "full_name": "Siva Kumar R",
+    "preferred_name": "Siva",
+    "role": "Computer Science Student & Software Developer",
+    "institution": "Panimalar Engineering College, Chennai",
+    "location": "Chennai, Tamil Nadu, India",
+    "portfolio_url": "https://sivakumar.dev",
+    "github_url": "https://github.com/sivakumar",
+    "linkedin_url": "https://linkedin.com/in/sivakumar"
+  },
+  "technical_skills": {
+    "languages": ["Python", "C/C++", "JavaScript", "SQL", "HTML/CSS"],
+    "frameworks_and_tools": ["FastAPI", "Flask", "Telethon", "Ollama", "Git", "Arduino IDE", "Docker"],
+    "domains": ["AI & LLM Applications", "Telegram Automation & MTProto", "Data Analytics & Machine Learning", "Embedded Systems & IoT", "Web Development"],
+    "architecture_preferences": "Prefers elegant single-file software architectures for backend scripts, modular micro-components, and unified web bundles."
+  },
+  "projects": [
+    {
+      "name": "M.O.N.I.C.A.",
+      "description": "Multimodal Operational Neural Intelligence & Conversational Assistant — an AI-first Telegram personal manager and userbot powered by local Ollama models."
+    },
+    {
+      "name": "LogLens",
+      "description": "A high-performance Python log analysis and parsing suite with unified single-file backend architecture."
+    },
+    {
+      "name": "IoT Industrial Safety Monitoring",
+      "description": "Arduino-based multi-sensor industrial hazard detection system utilizing MQ gas sensors, LDR optical monitoring, and ultrasonic distance telemetry."
+    }
+  ],
+  "allowed_facts": [
+    "Siva is a passionate computer science student at Panimalar Engineering College in Chennai.",
+    "He develops AI systems, Telegram userbots, Python backends, and embedded IoT hardware.",
+    "His portfolio showcases his software projects, lab research, and technical achievements.",
+    "He can be contacted via Telegram, GitHub, or LinkedIn.",
+    "He enjoys strength training, problem solving, and building practical automation tools."
+  ],
+  "forbidden_inventions": [
+    "Do NOT invent personal phone numbers, home street addresses, or private credentials.",
+    "Do NOT invent financial details, relationship status, or private personal data.",
+    "Do NOT fabricate availability or agree to binding contracts on Siva's behalf without his explicit confirmation.",
+    "Do NOT invent technical skills or degrees that Siva does not hold."
+  ]
+}

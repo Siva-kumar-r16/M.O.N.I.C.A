@@ -1,0 +1,47 @@
+# Environment / secrets
+.env
+.env.*
+!.env.example
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# IDE
+.vscode/
+.idea/
+
+# Logs
+*.log
+logs/
+
+# Local databases
+*.db
+*.sqlite
+*.sqlite3
+
+# Telegram sessions / authentication
+*.session
+*.session-journal
+sessions/
+
+# Local data
+data/
+runtime/
+tmp/
+temp/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Secrets / credentials
+secrets/
+credentials/
