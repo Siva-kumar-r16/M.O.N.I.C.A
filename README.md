@@ -167,8 +167,7 @@ Ollama
 Qwen 2.5 Coder 7B
 
 
-The AI model runs locally through Ollama.
-The AI provider is separated from the rest of the application so the model/backend can be changed later without redesigning the entire system.
+The AI model runs locally through Ollama. The AI provider is separated from the rest of the application so the model/backend can be changed later without redesigning the entire system.
 
 🌍 Language Handling
 
@@ -263,11 +262,11 @@ The plugin architecture allows functionality to be added independently without m
 M.O.N.I.C.A. includes a persistent scheduler system for automation and scheduled tasks.
 Potential uses include:
 
-Reminder
+Reminders
 
-Scheduled message
+Scheduled messages
 
-Periodic task
+Periodic tasks
 
 Future automation
 
@@ -351,7 +350,7 @@ logs/
 
 The repository's .gitignore is configured to help prevent accidental commits of these files.
 
-Never share your Telegram session string or API credentials publicly.
+⚠️ Never share your Telegram session string or API credentials publicly.
 
 📁 Project Structure
 
@@ -458,13 +457,14 @@ cd M.O.N.I.C.A
 
 
 2. Create a virtual environment
-Windows
+
+Windows:
 
 python -m venv .venv
 .venv\Scripts\activate
 
 
-Linux / macOS
+Linux / macOS:
 
 python3 -m venv .venv
 source .venv/bin/activate
@@ -477,10 +477,11 @@ pip install -r requirements.txt
 
 🔐 Configuration
 
-Create a local .env file.
-Do not commit .env to Git.
+Create a local .env file in the root directory.
 
-Example:
+⚠️ Do not commit .env to Git.
+
+Example .env:
 
 API_ID=your_telegram_api_id
 API_HASH=your_telegram_api_hash
@@ -505,8 +506,7 @@ Check installed models:
 ollama list
 
 
-M.O.N.I.C.A. connects to the local Ollama server.
-Ollama does not need to be exposed publicly.
+M.O.N.I.C.A. connects to the local Ollama server. Ollama does not need to be exposed publicly.
 
 ▶️ Running M.O.N.I.C.A.
 
@@ -516,18 +516,14 @@ python main.py
 
 
 A successful startup should indicate that M.O.N.I.C.A. has authenticated with Telegram and is listening for messages.
-Example:
+Example output:
 
 M.O.N.I.C.A. is active and listening for messages!
 
 
 🧪 Testing
 
-Testing utilities are located under:
-
-testing/
-
-
+Testing utilities are located under testing/.
 Current testing areas include:
 
 Message fixtures
@@ -555,7 +551,7 @@ The recommended development workflow is:
 6. git push
 
 
-Example:
+Example commands:
 
 git add .
 git commit -m "Update M.O.N.I.C.A."
@@ -648,6 +644,7 @@ See the LICENSE file included in this repository.
 ⚠️ Disclaimer
 
 M.O.N.I.C.A. is a personal software project intended for experimentation, learning, AI integration, automation, and personal productivity.
+
 Users are responsible for:
 
 Protecting their credentials
@@ -666,6 +663,5 @@ Never publish private authentication credentials, session strings, passwords, or
 
 👨‍💻 Project
 M.O.N.I.C.A.
-
 Multimodal Operational Neural Intelligence & Conversational Assistant
 A personal AI system designed to communicate, remember, automate, and evolve.
