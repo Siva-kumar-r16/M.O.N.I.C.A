@@ -51,4 +51,25 @@ class CallbackRouter:
                     except Exception:
                         pass
                     return False
+
+        # No handler matched -- answer so Telegram doesn't show a loading
+        # spinner forever on the user's client, but don't treat this as
+        # an error (an old/unrelated button, or a callback for a plugin
+        # that has since been disabled, is not exceptional).
+        try:
+            if hasattr(event, "answer"):
+                await event.answer()
+        except Exception:
+            pass
         return False
+
+
+# Global default callback router, mirroring monica.core.router.default_router.
+# Wired to the live Telegram client in main.py via
+# tg_client.register_callback_listener(default_callback_router.dispatch).
+# Previously this class existed and was unit-tested in isolation but was
+# never actually instantiated/connected to the running application --
+# no CallbackQuery ever reached it. That is fixed by this singleton +
+# the main.py wiring.
+default_callback_router = CallbackRouter()
+

@@ -19,6 +19,7 @@ from monica.ai import OllamaProvider, MonicaAIManager
 from monica.scheduler import SchedulerEngine
 from monica.plugins import PluginManager
 from monica.core.pipeline import MessagePipeline
+from monica.telegram import default_callback_router
 
 
 def setup_logging():
@@ -73,9 +74,16 @@ async def main():
     logger.info(f"API_ID: {config.API_ID} | API_HASH: {config.mask_secret(config.API_HASH)}")
     logger.info(f"Ollama Model: {config.OLLAMA_MODEL} at {config.OLLAMA_HOST}")
     logger.info(f"Auto-Reply: {'Enabled' if config.AUTO_REPLY else 'Disabled'} (Mode: {config.AUTO_REPLY_MODE})")
+    if config.bot_api_enabled():
+        logger.info("Telegram Bot API integration: configured (BOT_TOKEN set).")
+    else:
+        logger.info("Telegram Bot API integration disabled: BOT_TOKEN not configured.")
 
     # 2. Database & Migrations
     db_engine = DatabaseEngine(config.DATABASE_PATH)
+    # Open the single persistent connection now (see monica/db/engine.py
+    # CHANGELOG) instead of letting it lazily open on the first query.
+    await db_engine.connect()
     migrator = MigrationManager(db_engine)
     await migrator.run_migrations()
     repository = Repository(db_engine)
@@ -133,10 +141,17 @@ async def main():
         "ai_manager": ai_manager,
         "client": tg_client,
         "scheduler": scheduler,
+        "callback_router": default_callback_router,
     }
     plugin_manager = PluginManager(default_router, app_context)
     await plugin_manager.load_all()
     app_context["plugin_manager"] = plugin_manager
+
+    # Register the callback dispatcher so button presses actually reach
+    # registered handlers via the shared default_callback_router singleton
+    # (imported above from monica.telegram, matching the same pattern
+    # already used for default_router).
+    tg_client.register_callback_listener(default_callback_router.dispatch)
 
     # 9. Unified Message Processing Pipeline
     pipeline = MessagePipeline(
@@ -182,6 +197,20 @@ async def main():
         logger.info("Shutting down scheduler and Telegram client...")
         await scheduler.stop()
         await tg_client.stop()
+        # Close the AI provider's HTTP client and any pending memory
+        # background tasks, then flush/close the shared DB connection.
+        try:
+            await memory_mgr.close()
+        except Exception as e:
+            logger.warning(f"Error closing memory manager: {e}")
+        try:
+            await ollama_provider.close()
+        except Exception as e:
+            logger.warning(f"Error closing Ollama client: {e}")
+        try:
+            await db_engine.close()
+        except Exception as e:
+            logger.warning(f"Error closing database engine: {e}")
         logger.info("M.O.N.I.C.A. shutdown complete.")
 
 

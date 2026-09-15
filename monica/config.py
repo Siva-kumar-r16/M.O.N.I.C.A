@@ -96,6 +96,16 @@ class Config:
         ).strip()
 
         # ----------------------------------------------------
+        # Optional Telegram Bot API configuration
+        # ----------------------------------------------------
+        # M.O.N.I.C.A. runs on the MTProto user account and does NOT
+        # require this. It's read purely so that any FUTURE feature that
+        # genuinely needs the Bot API (e.g. true @-mention inline mode)
+        # can check `config.BOT_TOKEN` / `config.bot_api_enabled()`
+        # without assuming it's configured. Never logged in full.
+        self.BOT_TOKEN: str = os.getenv("BOT_TOKEN", "").strip()
+
+        # ----------------------------------------------------
         # Auto-reply configuration
         # ----------------------------------------------------
         self.AUTO_REPLY: bool = os.getenv(
@@ -207,7 +217,15 @@ class Config:
                 "OLLAMA_MODEL is missing."
             )
 
+        # NOTE: BOT_TOKEN is intentionally NOT validated as required --
+        # it's an optional future integration. Its absence must never
+        # block startup or be treated as a configuration error.
+
         return errors
+
+    def bot_api_enabled(self) -> bool:
+        """Whether an optional Telegram Bot API token has been configured."""
+        return bool(self.BOT_TOKEN)
 
     # ========================================================
     # SECRET MASKING

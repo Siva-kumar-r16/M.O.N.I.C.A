@@ -20,11 +20,33 @@ class DiscreteMemory:
     async def remember(
         self, chat_id: str, content: str, category: str = "fact", memory_key: Optional[str] = None
     ) -> int:
-        """Manually records a discrete fact into SQLite."""
+        """
+        Records a discrete fact into SQLite.
+
+        If a memory_key is given and a memory with that exact key already
+        exists for this chat, its content is UPDATED IN PLACE rather than
+        inserting a duplicate row -- this is what lets facts like "my name
+        is X" get refreshed if the user later says "my name is Y", instead
+        of both versions being remembered forever.
+        """
+        content = content.strip()
+
+        if memory_key:
+            existing = await self.repo.get_memory_by_key(chat_id, memory_key)
+            if existing:
+                if existing.get("content", "").strip() == content:
+                    # Nothing changed -- avoid a pointless duplicate write.
+                    return existing["id"]
+                await self.repo.update_memory_content(existing["id"], content)
+                logger.info(
+                    f"Updated memory #{existing['id']} for chat {chat_id}: [{category}] {content}"
+                )
+                return existing["id"]
+
         mem_id = await self.repo.add_memory(
             chat_id=chat_id,
             category=category,
-            content=content.strip(),
+            content=content,
             memory_key=memory_key,
         )
         logger.info(f"Saved memory #{mem_id} for chat {chat_id}: [{category}] {content}")
@@ -54,25 +76,36 @@ class DiscreteMemory:
         """
         text = user_text.strip().lower()
 
-        # Rule-based heuristics for quick, high-precision detection
+        # Rule-based heuristics for quick, high-precision detection.
+        # `singular=True` fields have exactly one true value at a time (a
+        # person only has one name/birthday/location/occupation), so a
+        # fixed memory_key means a newer statement correctly overwrites
+        # the old one instead of creating a duplicate.
+        # `singular=False` fields (open-ended preferences/dislikes) get a
+        # key derived from *what* was liked/disliked, so "I like coffee"
+        # and "I like hiking" are both kept, while repeating the same
+        # preference just refreshes it instead of duplicating it.
         patterns = [
-            (r"\bmy name is ([a-zA-Z\s]+)", "preference", "user_name"),
-            (r"\bcall me ([a-zA-Z\s]+)", "preference", "user_nickname"),
-            (r"\bi (?:prefer|like|love) (.+)", "preference", "preference"),
-            (r"\bi (?:hate|dislike|can't stand) (.+)", "preference", "dislike"),
-            (r"\bmy (?:birthday|bday) is (.+)", "fact", "birthday"),
-            (r"\bi live in (.+)", "fact", "location"),
-            (r"\bi work as (?:a|an)? (.+)", "fact", "occupation"),
+            (r"\bmy name is ([a-zA-Z\s]+)", "preference", "user_name", True),
+            (r"\bcall me ([a-zA-Z\s]+)", "preference", "user_nickname", True),
+            (r"\bi (?:prefer|like|love) (.+)", "preference", "preference", False),
+            (r"\bi (?:hate|dislike|can't stand) (.+)", "preference", "dislike", False),
+            (r"\bmy (?:birthday|bday) is (.+)", "fact", "birthday", True),
+            (r"\bi live in (.+)", "fact", "location", True),
+            (r"\bi work as (?:a|an)? (.+)", "fact", "occupation", True),
         ]
 
-        for pat, cat, key in patterns:
+        for pat, cat, base_key, singular in patterns:
             match = re.search(pat, text)
             if match:
                 fact_content = user_text.strip()
-                # Check for duplicate
-                existing = await self.repo.search_memories(match.group(1), chat_id)
-                if not existing:
-                    await self.remember(chat_id, fact_content, category=cat, memory_key=key)
-                    return {"category": cat, "key": key, "content": fact_content}
+                if singular:
+                    memory_key = base_key
+                else:
+                    captured = re.sub(r"[^a-z0-9]+", "_", match.group(1).strip().lower()).strip("_")
+                    memory_key = f"{base_key}:{captured[:40]}" if captured else base_key
+
+                await self.remember(chat_id, fact_content, category=cat, memory_key=memory_key)
+                return {"category": cat, "key": memory_key, "content": fact_content}
 
         return None

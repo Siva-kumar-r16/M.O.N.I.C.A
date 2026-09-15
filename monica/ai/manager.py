@@ -89,7 +89,6 @@ class MonicaAIManager:
             mem_ctx = {
                 "memories": [],
                 "conversation_summary": None,
-                "short_term_messages": [],
             }
 
         memories = mem_ctx.get(

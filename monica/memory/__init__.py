@@ -99,24 +99,16 @@ class MemoryManager:
             )
             summary = None
 
-        try:
-            recent = self.short_term.get_recent_messages(
-                chat_id,
-                limit=10,
-            )
-        except Exception as exc:
-            logger.error(
-                "Failed to retrieve short-term memory for %s: %s",
-                chat_id,
-                exc,
-                exc_info=True,
-            )
-            recent = []
-
+        # NOTE: this used to also fetch self.short_term.get_recent_messages()
+        # here and return it as "short_term_messages", but nothing downstream
+        # (ai/manager.py) ever read that key -- the actual recent-message
+        # context sent to the model comes from Repository.get_chat_history()
+        # in the pipeline instead. Removed the dead fetch/key to avoid
+        # confusing duplicate "recent messages" sources and the wasted work
+        # of assembling a dict entry no one consumes.
         return {
             "memories": memories,
             "conversation_summary": summary,
-            "short_term_messages": recent,
         }
 
     # ------------------------------------------------------------------
@@ -161,23 +153,14 @@ class MemoryManager:
         )
 
         # --------------------------------------------------------------
-        # 2. Short-term memory
+        # 2. Long-term summarization
         # --------------------------------------------------------------
-
-        if direction == "incoming":
-            try:
-                self.short_term_message = {
-                    "message_id": message_id,
-                    "message": text,
-                    "sender_name": sender_name,
-                    "direction": "incoming",
-                }
-            except Exception:
-                pass
-
-        # --------------------------------------------------------------
-        # 3. Long-term summarization
-        # --------------------------------------------------------------
+        # (Short-term debounce buffering is handled directly by the
+        # pipeline via `memory.short_term.add_incoming_message(...)` at
+        # the point the message arrives -- it doesn't need to happen
+        # here too. The previous version of this method also set a
+        # `self.short_term_message` attribute here, but nothing ever
+        # read it; it was dead code and has been removed.)
 
         if direction != "incoming":
             return

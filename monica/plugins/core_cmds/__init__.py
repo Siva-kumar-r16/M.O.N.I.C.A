@@ -16,6 +16,20 @@ from monica.telegram.buttons import ButtonBuilder, create_portfolio_buttons
 
 START_TIME = datetime.datetime.now()
 
+# Small cosmetic map -- purely decorative, falls back to a generic icon
+# for any category not listed here (new plugins don't need to touch this).
+_CATEGORY_ICONS = {
+    "Core": "⚙️",
+    "Contacts": "👥",
+    "Memory": "🧠",
+    "Automation": "⏰",
+}
+
+
+def _slug(text: str) -> str:
+    """Compact, callback_data-safe identifier for a category name."""
+    return "".join(ch.lower() if ch.isalnum() else "_" for ch in text).strip("_")
+
 
 class CoreCommandsPlugin(BasePlugin):
     name = "Core Commands"
@@ -25,9 +39,11 @@ class CoreCommandsPlugin(BasePlugin):
 
     async def on_load(self):
         # System & Status
-        self.register_command("help", self.cmd_help, "Displays categorized command catalog.", "/help [category/command]")
+        self.register_command("help", self.cmd_help, "Displays an interactive, categorized command menu.", "/help [command]",
+                               examples=["/help", "/help remember"])
         self.register_command("status", self.cmd_status, "Displays system health and operational statistics.", "/status")
-        self.register_command("auto", self.cmd_auto, "Toggles automated AI replies on or off.", "/auto [on|off]")
+        self.register_command("auto", self.cmd_auto, "Toggles automated AI replies on or off.", "/auto [on|off]",
+                               examples=["/auto on", "/auto off"])
         self.register_command("mode", self.cmd_mode, "Views or changes auto-reply filter mode.", "/mode [allowlist|all_private|all|disabled]")
         self.register_command("model", self.cmd_model, "Views or updates current local Ollama model.", "/model [model_name]")
         self.register_command("reload", self.cmd_reload, "Reloads persona, profile, and plugins on the fly.", "/reload")
@@ -37,7 +53,8 @@ class CoreCommandsPlugin(BasePlugin):
         self.register_command("ping", self.cmd_ping, "Checks bot latency and responsiveness.", "/ping")
 
         # Contact Management
-        self.register_command("add", self.cmd_add, "Adds a user to the approved auto-reply allowlist.", "/add <chat_id> [custom_style]", category="Contacts")
+        self.register_command("add", self.cmd_add, "Adds a user to the approved auto-reply allowlist.", "/add <chat_id> [custom_style]", category="Contacts",
+                               examples=["/add 123456789 friendly and casual"])
         self.register_command("remove", self.cmd_remove, "Removes a user from the approved allowlist.", "/remove <chat_id>", category="Contacts")
         self.register_command("list", self.cmd_list, "Lists all configured contacts and settings.", "/list", category="Contacts")
         self.register_command("approve", self.cmd_approve, "Approves a user in private messages (PM Permit).", "/approve [chat_id]", category="Contacts")
@@ -45,28 +62,165 @@ class CoreCommandsPlugin(BasePlugin):
         self.register_command("unblock", self.cmd_unblock, "Unblocks a previously blocked contact.", "/unblock <chat_id>", category="Contacts")
 
         # Memory Controls
-        self.register_command("remember", self.cmd_remember, "Saves a discrete fact or preference to memory.", "/remember <fact>", category="Memory")
-        self.register_command("forget", self.cmd_forget, "Deactivates a memory record by ID.", "/forget <id>", category="Memory")
+        self.register_command("remember", self.cmd_remember, "Saves a discrete fact or preference to memory.", "/remember <fact>", category="Memory",
+                               examples=["/remember My favorite language is Python"])
+        self.register_command("forget", self.cmd_forget, "Deactivates a memory record by ID.", "/forget <id>", category="Memory",
+                               examples=["/forget 12"])
         self.register_command("memory", self.cmd_memory, "Views or searches stored memories for this chat.", "/memory [query]", category="Memory")
         self.register_command("reset", self.cmd_reset, "Clears memories for the current chat or globally.", "/reset [all]", category="Memory")
 
         # Automation / Scheduling
-        self.register_command("schedule", self.cmd_schedule, "Schedules a persistent one-off or recurring reminder.", "/schedule <time> <message>", category="Automation")
+        self.register_command("schedule", self.cmd_schedule, "Schedules a persistent one-off or recurring reminder.", "/schedule <time> <message>", category="Automation",
+                               examples=["/schedule 30m Call Arun", "/schedule 08:00 Good morning"])
         self.register_command("reminders", self.cmd_reminders, "Lists all active scheduled reminders.", "/reminders", category="Automation")
         self.register_command("cancelreminder", self.cmd_cancelreminder, "Cancels an active reminder by ID.", "/cancelreminder <job_id>", category="Automation")
 
-    # --- Handlers ---
+        # Interactive help navigation (buttons edit the same message; see
+        # HELP SYSTEM section below). Registered as callbacks, not commands,
+        # since they're only ever triggered by pressing a button.
+        self.register_callback(r"^help:home$", self._cb_help_home)
+        self.register_callback(r"^help:cat:(?P<cat_slug>[a-z0-9_]+)$", self._cb_help_category)
+        self.register_callback(r"^help:cmd:(?P<cat_slug>[a-z0-9_]+):(?P<cmd_name>[a-z0-9_]+)$", self._cb_help_command)
+
+    # =====================================================================
+    # HELP SYSTEM
+    # =====================================================================
+    # Interactive, button-driven help modeled on an Ultroid-style menu, but
+    # built entirely on the app's own CommandRouter metadata (description /
+    # usage / category / examples / requires_bot_token) -- nothing here is
+    # a manually duplicated command list. Adding a new command anywhere in
+    # any plugin makes it show up automatically; nothing here needs editing.
+    #
+    # Navigation is fully stateless: every button's callback_data encodes
+    # exactly where to go next (home / a category / a specific command),
+    # so there's no server-side "current menu" to track, no DB write, and
+    # no LLM call involved anywhere in this flow -- it's pure metadata
+    # formatting, so it's fast and safe to spam-click.
+
+    def _build_home_view(self, ctx_or_event) -> tuple:
+        catalog = self.router.get_help_catalog(is_admin=True)
+        text = (
+            "✨ **M.O.N.I.C.A. Help**\n\n"
+            "Choose a category to see its commands.\n"
+            "_Admin commands are restricted to your authorized account._"
+        )
+        builder = ButtonBuilder()
+        cats = sorted(catalog.keys())
+        for i, cat in enumerate(cats):
+            icon = _CATEGORY_ICONS.get(cat, "📁")
+            builder.callback(f"{icon} {cat}", f"help:cat:{_slug(cat)}")
+            if i % 2 == 1:
+                builder.row()
+        builder.row()
+        return text, builder.build()
+
+    def _build_category_view(self, cat_slug: str) -> tuple:
+        catalog = self.router.get_help_catalog(is_admin=True)
+        match_cat = next((c for c in catalog if _slug(c) == cat_slug), None)
+        if not match_cat:
+            return "⚠️ That category no longer exists (a plugin may have been disabled).", self._nav_buttons(None)
+
+        icon = _CATEGORY_ICONS.get(match_cat, "📁")
+        lines = [f"{icon} **{match_cat}**\n"]
+        for defn in catalog[match_cat]:
+            tag = " 🔒" if defn.requires_bot_token else ""
+            lines.append(f"`/{defn.command}` — {defn.description}{tag}")
+        lines.append("")
+        if any(d.requires_bot_token for d in catalog[match_cat]):
+            lines.append("🔒 = requires optional Bot API configuration (`BOT_TOKEN`)")
+
+        # Two command buttons per row, then the Back/Home nav row.
+        builder = ButtonBuilder()
+        cmds = catalog[match_cat]
+        for i, defn in enumerate(cmds):
+            builder.callback(f"/{defn.command}", f"help:cmd:{cat_slug}:{defn.command}")
+            if i % 2 == 1:
+                builder.row()
+        builder.row()
+        builder.callback("🏠 Home", "help:home")
+        builder.row()
+        return "\n".join(lines), builder.build()
+
+    def _build_command_view(self, cat_slug: str, cmd_name: str) -> tuple:
+        defn = self.router.get_command(cmd_name)
+        if not defn:
+            return "⚠️ That command no longer exists (a plugin may have been disabled/reloaded).", self._nav_buttons(cat_slug)
+
+        lines = [f"📖 **/{defn.command}**\n"]
+        lines.append(f"**Usage:** `{defn.usage}`")
+        lines.append(f"**Description:** {defn.description}")
+        if defn.aliases:
+            lines.append(f"**Aliases:** {', '.join('/' + a for a in defn.aliases)}")
+        if defn.examples:
+            lines.append("**Examples:**")
+            for ex in defn.examples:
+                lines.append(f"  `{ex}`")
+        lines.append(f"**Permission:** {'Admin only' if defn.admin_only else 'Any allowed contact'}")
+        if defn.requires_bot_token:
+            cfg = self.app.get("config")
+            configured = bool(cfg and cfg.bot_api_enabled())
+            status = "configured ✅" if configured else "NOT configured ⚠️ (set BOT_TOKEN in .env)"
+            lines.append(f"**Requires:** Telegram Bot API — {status}")
+        return "\n".join(lines), self._nav_buttons(cat_slug)
+
+    def _nav_buttons(self, back_to_cat_slug):
+        builder = ButtonBuilder()
+        if back_to_cat_slug:
+            builder.callback("◀ Back", f"help:cat:{back_to_cat_slug}")
+        builder.callback("🏠 Home", "help:home")
+        builder.row()
+        return builder.build()
+
+    def _is_authorized(self, event) -> bool:
+        cfg = self.app.get("config")
+        if not cfg or not cfg.ADMIN_USER_ID:
+            return False
+        try:
+            return int(event.sender_id) == int(cfg.ADMIN_USER_ID)
+        except (TypeError, ValueError):
+            return False
 
     async def cmd_help(self, ctx: CommandContext):
-        catalog = self.router.get_help_catalog(is_admin=ctx.is_admin)
-        lines = ["✨ **M.O.N.I.C.A. Command Catalog** ✨\n"]
-        for cat, cmds in catalog.items():
-            lines.append(f"📁 **{cat}**:")
-            for c in cmds:
-                lines.append(f"  • `/{c.command}`: {c.description}")
-            lines.append("")
-        lines.append("💡 _Tip: Admin commands are strictly restricted to your authorized account._")
-        await ctx.reply("\n".join(lines))
+        # `/help <command>` jumps straight to that command's detail view;
+        # plain `/help` shows the category grid. Both are a single message
+        # that subsequent button presses then EDIT in place.
+        target = ctx.args.strip().lstrip("/.")
+        if target:
+            defn = self.router.get_command(target)
+            if defn:
+                text, buttons = self._build_command_view(_slug(defn.category), defn.command)
+                await ctx.reply(text, buttons=buttons)
+                return
+            await ctx.reply(f"⚠️ Unknown command `/{target}`. Showing the full menu instead.")
+        text, buttons = self._build_home_view(ctx)
+        await ctx.reply(text, buttons=buttons)
+
+    async def _cb_help_home(self, event):
+        if not self._is_authorized(event):
+            await event.answer("Not authorized.", alert=True)
+            return
+        text, buttons = self._build_home_view(event)
+        await event.edit(text, buttons=buttons)
+        await event.answer()
+
+    async def _cb_help_category(self, event, cat_slug: str):
+        if not self._is_authorized(event):
+            await event.answer("Not authorized.", alert=True)
+            return
+        text, buttons = self._build_category_view(cat_slug)
+        await event.edit(text, buttons=buttons)
+        await event.answer()
+
+    async def _cb_help_command(self, event, cat_slug: str, cmd_name: str):
+        if not self._is_authorized(event):
+            await event.answer("Not authorized.", alert=True)
+            return
+        text, buttons = self._build_command_view(cat_slug, cmd_name)
+        await event.edit(text, buttons=buttons)
+        await event.answer()
+
+    # --- Handlers ---
+
 
     async def cmd_status(self, ctx: CommandContext):
         uptime = str(datetime.datetime.now() - START_TIME).split(".")[0]

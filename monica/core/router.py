@@ -65,6 +65,8 @@ class CommandDefinition:
     admin_only: bool = True
     category: str = "General"
     aliases: List[str] = field(default_factory=list)
+    examples: List[str] = field(default_factory=list)
+    requires_bot_token: bool = False
 
 
 class CommandRouter:
@@ -83,6 +85,8 @@ class CommandRouter:
         admin_only: bool = True,
         category: str = "General",
         aliases: Optional[List[str]] = None,
+        examples: Optional[List[str]] = None,
+        requires_bot_token: bool = False,
     ):
         """Decorator to register a command handler."""
         cmd_clean = command.strip().lower().lstrip("/.")
@@ -96,6 +100,8 @@ class CommandRouter:
                 admin_only=admin_only,
                 category=category,
                 aliases=aliases or [],
+                examples=examples or [],
+                requires_bot_token=requires_bot_token,
             )
             self._commands[cmd_clean] = defn
             if aliases:
@@ -149,6 +155,16 @@ class CommandRouter:
             await ctx.reply("⛔ **Access Denied**: This command is restricted to the administrator.")
             return True
 
+        # Optional-Bot-API gate: a command flagged requires_bot_token=True
+        # must never be attempted (and fail confusingly) when BOT_TOKEN
+        # isn't configured -- tell the user plainly instead.
+        if defn.requires_bot_token and not getattr(ctx.config, "bot_api_enabled", lambda: False)():
+            await ctx.reply(
+                f"⚠️ **Unavailable**: `/{canonical}` requires Telegram Bot API configuration "
+                f"(set `BOT_TOKEN` in `.env`), which is not currently configured."
+            )
+            return True
+
         try:
             logger.info(f"Executing command: /{canonical} [args: '{args}'] by {ctx.sender_id}")
             await defn.handler(ctx)
@@ -168,6 +184,12 @@ class CommandRouter:
                 catalog[defn.category] = []
             catalog[defn.category].append(defn)
         return catalog
+
+    def get_command(self, command: str) -> Optional[CommandDefinition]:
+        """Looks up a single command's definition by name or alias (for help detail views)."""
+        cmd_clean = command.strip().lower().lstrip("/.")
+        canonical = self._aliases.get(cmd_clean, cmd_clean)
+        return self._commands.get(canonical)
 
 
 # Global default command router

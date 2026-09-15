@@ -121,6 +121,26 @@ class Repository:
             cur = await conn.execute(sql, (str(chat_id), category, memory_key or "", content, now_str, now_str))
             return cur.lastrowid
 
+    async def get_memory_by_key(self, chat_id: str, memory_key: str) -> Optional[Dict[str, Any]]:
+        """Finds the active memory for this chat with an exact memory_key match, if any."""
+        sql = """
+        SELECT id, category, memory_key, content, created_at, updated_at
+        FROM memories
+        WHERE chat_id = ? AND memory_key = ? AND is_active = 1
+        ORDER BY id DESC
+        LIMIT 1;
+        """
+        async with self.engine.get_connection() as conn:
+            return await conn.fetchone(sql, (str(chat_id), memory_key))
+
+    async def update_memory_content(self, memory_id: int, content: str) -> None:
+        """Overwrites the content of an existing memory in place (used to refresh a fact
+        when the user gives newer information, instead of storing a duplicate)."""
+        now_str = datetime.datetime.now().isoformat()
+        sql = "UPDATE memories SET content = ?, updated_at = ? WHERE id = ?;"
+        async with self.engine.get_connection() as conn:
+            await conn.execute(sql, (content, now_str, memory_id))
+
     async def get_memories_for_context(self, chat_id: str, limit: int = 10) -> List[Dict[str, Any]]:
         sql = """
         SELECT id, category, memory_key, content, created_at
